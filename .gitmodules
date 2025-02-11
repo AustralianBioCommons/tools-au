@@ -1,9 +1,6 @@
 [submodule "tools/bindcraft/docker/.bindcraft"]
 	path = tools/bindcraft/docker/.bindcraft
 	url = https://github.com/martinpacesa/BindCraft.git
-[submodule "tools/bindcraft/docker/bindcraft"]
-	path = tools/bindcraft/docker/bindcraft
-	url = https://github.com/martinpacesa/BindCraft.git
 [submodule "tools/bindcraft/docker/1.1.0/bindcraft"]
 	path = tools/bindcraft/docker/1.1.0/bindcraft
 	url = https://github.com/martinpacesa/BindCraft.git
