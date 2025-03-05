@@ -66,8 +66,10 @@ RUN chmod +x /app/install_bindcraft.sh
 WORKDIR /app/
 RUN /app/install_bindcraft.sh --cuda 12.4.1 --pkg_manager 'conda'
 
-# Install pip packages.
-
+# properly configure ldconfig and run it
+RUN echo "/opt/conda/lib" > /etc/ld.so.conf.d/conda.conf \
+    && echo "/opt/conda/envs/BindCraft/lib" >> /etc/ld.so.conf.d/conda.conf \
+    && ldconfig
 # Add SETUID bit to the ldconfig binary so that non-root users can run it.
 RUN chmod u+s /sbin/ldconfig.real
 
