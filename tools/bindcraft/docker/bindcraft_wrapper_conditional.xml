@@ -1,0 +1,434 @@
+<tool id="bindcraft" name="BindCraft" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="22.05">
+  <description> - Simple binder design pipeline using AlphaFold2 backpropagation, MPNN, and PyRosetta</description>
+  
+  <macros>
+    <token name="@TOOL_VERSION@">1.5.0</token>
+    <token name="@TOOL_MINOR_VERSION@">1.5</token>
+    <token name="@VERSION_SUFFIX@">1</token>
+    <import>macro_output.xml</import>
+    <import>macro_test_output.xml</import>
+  </macros>
+  
+  <edam_topics>
+    <edam_topic>topic_0082</edam_topic>
+  </edam_topics>
+  
+  <edam_operations>
+    <edam_operation>operation_0474</edam_operation>
+  </edam_operations>
+  
+  <xrefs>
+    <xref type="bio.tools">bindcraft</xref>
+  </xrefs>
+  
+  <requirements>
+    <container type="docker">australianbiocommons/bindcraft:v1.5.0</container>
+  </requirements>
+  
+  <required_files>
+    <include path="scripts/outputs.py" />
+    <include path="scripts/validate_fasta.py" />
+    <include path="scripts/alphafold.html" />
+  </required_files>
+  
+  <command detect_errors="exit_code"><![CDATA[
+    
+    ## Write Parameters to settings_target  ---------------------------------------
+    echo '{' >> ./settings_target/PDL1_new.json
+    echo '   "design_path": "/content/drive/My Drive/BindCraft/PDL1/",' >> ./settings_target/PDL1_new.json
+    echo '   "binder_name": "${binder_name}",' >> ./settings_target/PDL1_new.json
+    echo '   "starting_pdb": "$__new_file_path__/${starting_pdb}",' >> ./settings_target/PDL1_new.json    #/app/bindcraft/example/PDL1.pdb
+    echo '   "chains": "${chains}",' >> ./settings_target/PDL1_new.json
+    echo '   "target_hotspot_residues": "${target_hotspot_residues}",' >> ./settings_target/PDL1_new.json
+    echo '   "lengths": ${lengths},' >> ./settings_target/PDL1_new.json
+    echo '   "number_of_final_designs": ${number_of_final_designs},' >> ./settings_target/PDL1_new.json
+    echo '}' >> ./settings_target/PDL1_new.json
+    
+    
+    ## Run BindCraft  -------------------------------------------------------------
+    && /app/bindcraft/bindcraft.py 
+    --settings './settings_target/PDL1_new.json' 
+    --filters './settings_filters/${settings_filters}'
+    --advanced './settings_advanced/${settings_advanced}'
+    
+    ]]></command>
+  
+  <inputs>
+    <param name="starting_pdb" type="data" multiple="false" format="pdb" label="input starting pdb file" help="Select a single PDB file from your history." />
+    
+    <param name="binder_name" type="text" value="PDL1" label="..." help="..."/>
+    <param name="chains" type="text" value="A" label="..." help="..."/>
+    <param name="target_hotspot_residues" type="text" value="56" label="..." help="..."/>
+    <param name="lengths" type="text" value="[65, 150]" label="..." help="Provide an array in the format [int, int]"/>
+    <param name="number_of_final_designs" type="text" value="100" label="..." help="..."/>
+    
+    <conditional name="filters_selection">
+      <param name="input_mode" type="select" label="Filter Settings" help="Use predefined filter settings or provide JSON file.">
+        <option value="history">Use json from history</option>
+        <option value="list">Select from list</option>
+      </param>
+      <when value="history">
+        <param name="settings_filters" type="data" multiple="false" format="json" label="JSON file from history" help="Select single JSON file specifying all parameters defined in the settings_filters files from your history." />
+      </when>
+      <when value="list">
+        <param name="settings_filters" type="select" label="...">
+          <option value="default_filters" selected="true">default_filters.json</option>
+          <option value="no_filters">no_filters.json</option>
+          <option value="peptide_filters">peptide_filters.json</option>
+          <option value="peptide_relaxed_filters">peptide_relaxed_filters.json</option>
+          <option value="relaxed_filters">relaxed_filters.json</option>
+        </param>
+      </when>
+    </conditional>
+    
+    <conditional name="advanced_selection">
+      <param name="input_mode" type="select" label="Advanced Settings" help="Use predefined advanced settings or provide JSON file.">
+        <option value="history">Use json from history</option>
+        <option value="list">Select from list</option>
+      </param>
+      <when value="history">
+        <param name="settings_advanced" type="data" multiple="false" format="json" label="JSON file from history" help="Select single JSON file specifying all parameters defined in the settings_advanced files from your history." />
+      </when>
+      <when value="list">
+        <param name="settings_advanced" type="select" label="...">
+          <option value="betasheet_4stage_multimer">betasheet_4stage_multimer.json</option>
+          <option value="betasheet_4stage_multimer_flexible">betasheet_4stage_multimer_flexible.json</option>
+          <option value="betasheet_4stage_multimer_flexible_hardtarget">betasheet_4stage_multimer_flexible_hardtarget.json</option>
+          <option value="betasheet_4stage_multimer_hardtarget">betasheet_4stage_multimer_hardtarget.json</option>
+          <option value="betasheet_4stage_multimer_mpnn">betasheet_4stage_multimer_mpnn.json</option>
+          <option value="betasheet_4stage_multimer_mpnn_flexible">betasheet_4stage_multimer_mpnn_flexible.json</option>
+          <option value="betasheet_4stage_multimer_mpnn_flexible_hardtarget">betasheet_4stage_multimer_mpnn_flexible_hardtarget.json</option>
+          <option value="betasheet_4stage_multimer_mpnn_hardtarget">betasheet_4stage_multimer_mpnn_hardtarget.json</option>
+          <option value="default_4stage_multimer" selected="true">default_4stage_multimer.json</option>
+          <option value="default_4stage_multimer_flexible">default_4stage_multimer_flexible.json</option>
+          <option value="default_4stage_multimer_flexible_hardtarget">default_4stage_multimer_flexible_hardtarget.json</option>
+          <option value="default_4stage_multimer_hardtarget">default_4stage_multimer_hardtarget.json</option>
+          <option value="default_4stage_multimer_mpnn">default_4stage_multimer_mpnn.json</option>
+          <option value="default_4stage_multimer_mpnn_flexible">default_4stage_multimer_mpnn_flexible.json</option>
+          <option value="default_4stage_multimer_mpnn_flexible_hardtarget">default_4stage_multimer_mpnn_flexible_hardtarget.json</option>
+          <option value="default_4stage_multimer_mpnn_hardtarget">default_4stage_multimer_mpnn_hardtarget.json</option>
+          <option value="peptide_3stage_multimer">peptide_3stage_multimer.json</option>
+          <option value="peptide_3stage_multimer_flexible">peptide_3stage_multimer_flexible.json</option>
+          <option value="peptide_3stage_multimer_mpnn">peptide_3stage_multimer_mpnn.json</option>
+          <option value="peptide_3stage_multimer_mpnn_flexible">peptide_3stage_multimer_mpnn_flexible.json</option>
+        </param>
+      </when>
+    </conditional>
+  </inputs>
+  
+  <outputs>
+    <data 
+      name="trajectory_stats" 
+      format="csv" 
+      from_work_dir="output/bindcraft/trajectory_stats.csv" 
+      label="${tool.name} on ${on_string}: CSV Trajectory Stats">
+    </data>
+    
+    <data 
+      name="mpnn_design_stats" 
+      format="csv" 
+      from_work_dir="output/bindcraft/mpnn_design_stats.csv" 
+      label="${tool.name} on ${on_string}: CSV MPNN Design Stats">
+    </data>
+    
+    <data
+      name="final_design_stats" 
+      format="csv" 
+      from_work_dir="output/bindcraft/final_design_stats.csv" 
+      label="${tool.name} on ${on_string}: CSV Final Design Stats">
+    </data>
+    
+    <data 
+      name="failure_csv" 
+      format="csv" 
+      from_work_dir="output/bindcraft/failure_csv.csv" 
+      label="${tool.name} on ${on_string}: CSV Failure">
+    </data>
+    
+    <!-- Outputs Accepted -->
+    <collection name="pdb_output_accepted" type="list" label="${tool.name} on ${on_string}: PDB Outputs Accepted">
+      <!-- <discover_datasets pattern="__name_and_ext__" directory="output/Accepted" visible="true" format="pdb"/> -->
+      <discover_datasets pattern="(?P&lt;designation&gt;.+)\.pdb" directory="output/Accepted" visible="true" format="pdb"/>
+    </collection>
+    
+    <collection name="pdb_output_accepted_ranked" type="list" label="${tool.name} on ${on_string}: PDB Outputs Accepted Ranked">
+      <discover_datasets pattern="__name_and_ext__" directory="output/Accepted/Ranked" visible="true" format="pdb"/>
+    </collection>
+    
+    <collection name="pdb_output_accepted_animation" type="list" label="${tool.name} on ${on_string}: PDB Outputs Animation">
+      <!-- <discover_datasets pattern="__name_and_ext__" directory="output/Accepted" visible="true" format="pdb"/> -->
+      <discover_datasets pattern="(?P&lt;designation&gt;.+)\.html" directory="output/Animation" visible="true" format="html"/>
+    </collection>
+    
+    <collection name="pdb_output_accepted_plots" type="list" label="${tool.name} on ${on_string}: PDB Outputs Plots">
+      <!-- <discover_datasets pattern="__name_and_ext__" directory="output/Accepted" visible="true" format="pdb"/> -->
+      <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" directory="output/Plots" visible="true" format="png"/>
+    </collection>
+    
+    <collection name="pdb_output_accepted_pickle" type="list" label="${tool.name} on ${on_string}: PDB Outputs Pickle">
+      <!-- <discover_datasets pattern="__name_and_ext__" directory="output/Accepted" visible="true" format="pdb"/> -->
+      <discover_datasets pattern="(?P&lt;designation&gt;.+)\.pkl" directory="output/Pickle" visible="true" format="pkl"/>
+    </collection>
+    
+    <!-- Outputs MPNN -->
+    <collection name="pdb_output_mpnn_binder" type="list" label="${tool.name} on ${on_string}: PDB Outputs MPNN Binder">
+      <discover_datasets pattern="__name_and_ext__" directory="output/MPNN/Binder" visible="true" format="pdb"/>
+    </collection>
+    
+    <collection name="pdb_output_mpnn_relaxed" type="list" label="${tool.name} on ${on_string}: PDB Outputs MPNN Relaxed">
+      <discover_datasets pattern="__name_and_ext__" directory="output/MPNN/Relaxed" visible="true" format="pdb"/>
+    </collection>
+    
+    <collection name="pdb_output_mpnn_sequences" type="list" label="${tool.name} on ${on_string}: PDB Outputs MPNN Sequences">
+      <discover_datasets pattern="__name_and_ext__" directory="output/MPNN/Sequences" visible="true" format="pdb"/>
+    </collection>
+    
+    <!-- Outputs Rejected -->
+    <collection name="pdb_output_rejected" type="list" label="${tool.name} on ${on_string}: PDB Outputs Rejected">
+      <discover_datasets pattern="__name_and_ext__" directory="output/Rejected" visible="true" format="pdb"/>
+    </collection>
+    
+    <!-- Outputs Trajectory -->
+    <collection name="pdb_output_trajectory_clashing" type="list" label="${tool.name} on ${on_string}: PDB Outputs Trajectory Clashing">
+      <discover_datasets pattern="__name_and_ext__" directory="output/Trajectory/Clashing" visible="true" format="pdb"/>
+    </collection>
+    
+    <collection name="pdb_output_trajectory_lowconfidence" type="list" label="${tool.name} on ${on_string}: PDB Outputs Trajectory LowConfidence">
+      <discover_datasets pattern="__name_and_ext__" directory="output/Trajectory/LowConfidence" visible="true" format="pdb"/>
+    </collection>
+    
+    <collection name="pdb_output_trajectory_relaxed" type="list" label="${tool.name} on ${on_string}: PDB Outputs Trajectory Relaxed">
+      <discover_datasets pattern="__name_and_ext__" directory="output/Trajectory/Relaxed" visible="true" format="pdb"/>
+    </collection>
+    
+    <collection name="pdb_output_trajectory_animation" type="list" label="${tool.name} on ${on_string}: PDB Outputs Trajectory Animation">
+      <discover_datasets pattern="__name_and_ext__" directory="output/Trajectory/Animation" visible="true" format="html"/>
+    </collection>
+    
+    <collection name="pdb_output_trajectory_plots" type="list" label="${tool.name} on ${on_string}: PDB Outputs Trajectory Plots">
+      <discover_datasets pattern="__name_and_ext__" directory="output/Trajectory/Plots" visible="true" format="png"/>
+    </collection>
+  </outputs>
+        
+        
+  <tests>
+    <!-- Test with default outputs -->
+    <test expect_num_outputs="6">
+      <param name="starting_pdb" value="/app/bindcraft/example/PDL1.pdb" />
+      <param name="binder_name" value="PDL1"/>
+      <param name="chains" value="A" />
+      <param name="target_hotspot_residues" value="56"/>
+      <param name="lengths" value="[65, 150]"/>
+      <param name="number_of_final_designs" value="100"/>
+      <param name="settings_filters" value="default_filters"/>
+      <param name="settings_advanced" value="default_4stage_multimer"/>
+      
+      <output name="trajectory_stats">
+        <assert_contents>
+          <has_n_lines n="155"/>
+          <!-- <has_size min="2000" /> -->
+        </assert_contents>
+      </output>
+      
+      <output name="mpnn_design_stats">
+        <assert_contents>
+          <has_n_lines n="585"/>
+          <!-- <has_size min="2000" /> -->
+        </assert_contents>
+      </output>
+      
+      <output name="final_design_stats">
+        <assert_contents>
+          <has_n_lines n="102"/>
+          <!-- <has_size min="2000" /> -->
+        </assert_contents>
+      </output>
+      
+      <output name="failure_csv">
+        <assert_contents>
+          <has_n_lines n="2"/>
+          <!-- <has_size min="2000" /> -->
+        </assert_contents>
+      </output>
+      
+      <output_collection name="pdb_output_accepted" type="list" count="101">
+      </output_collection>
+      
+      <output_collection name="pdb_output_accepted_ranked" type="list" count="101">
+      </output_collection>
+      
+      <output_collection name="pdb_output_accepted_animation" type="list" count="56">
+      </output_collection>
+      
+      <output_collection name="pdb_output_accepted_pickle" type="list" count="0">
+      </output_collection>
+      
+      <output_collection name="pdb_output_accepted_plots" type="list" count="504">
+      </output_collection>
+      
+      <output_collection name="pdb_output_mpnn_binder" type="list" count="0">
+      </output_collection>
+      
+      <output_collection name="pdb_output_mpnn_relaxed" type="list" count="1168">
+      </output_collection>
+      
+      <output_collection name="pdb_output_mpnn_sequences" type="list" count="0">
+      </output_collection>
+      
+      <output_collection name="pdb_output_rejected" type="list" count="483">
+      </output_collection>
+      
+      <output_collection name="pdb_output_trajectory_clashing" type="list" count="28">
+      </output_collection>
+      
+      <output_collection name="pdb_output_trajectory_lowconfidence" type="list" count="33">
+      </output_collection>
+      
+      <output_collection name="pdb_output_trajectory_relaxed" type="list" count="154">
+      </output_collection>
+      
+      <output_collection name="pdb_output_trajectory_animation" type="list" count="215">
+      </output_collection>
+      
+      <output_collection name="pdb_output_trajectory_plots" type="list" count="1935">
+      </output_collection>
+      
+      <output_collection name="pdb_output_accepted" type="list" count="101">
+        <element name="l11">
+          <assert_contents>
+            <has_text_matching expression="^identifier is l11\n$" />
+          </assert_contents>
+        </element>
+      </output_collection>
+      
+      <output name="pdb_output">
+        <discovered_dataset designation="sample2" ftype="tabular">
+          <assert_contents><has_line line="2" /></assert_contents>
+        </discovered_dataset>
+        <assert_contents>
+          <has_n_lines n="5"/>
+          <has_size min="2000" />
+        </assert_contents>
+      </output>
+      
+    </test>
+    
+  </tests>
+  
+  <help><![CDATA[
+    
+    .. class:: infomark
+    
+    | BindCraft: Simple binder design pipeline using AlphaFold2 backpropagation, MPNN, and PyRosetta.
+    |
+    | **NOTE: this tool packages** `a modified branch of BindCraft v1.5.0. <https://github.com/martinpacesa/BindCraft/tree/v1.5.0>`_
+    |
+    | This means that the neural network has been trained on PDBs with a release
+    | date before 2021-09-30 (the training cutoff was 2018-04-30 until ``v2.3.0``).
+    |
+    | Find out more in the technical and release notes:
+    |
+    
+    - `Release notes for v1.5.0 <https://github.com/martinpacesa/BindCraft/releases/tag/v1.5.0>`_
+          
+    **What it does**
+          
+    *What is BindCraft?*
+          
+    | Simple binder design pipeline using AlphaFold2 backpropagation, MPNN, and PyRosetta. Select your target and let the script do the rest of the work and finish once you have enough designs to order!
+    |
+          
+    
+    **Inputs**
+          
+    *Target Parameters*
+    
+    | design_path               -> path where to save designs and statistics
+    | binder_name               -> what to prefix your designed binder files with
+    | starting_pdb              -> the path to the PDB of your target protein
+    | chains                    -> which chains to target in your protein, rest will be ignored
+    | target_hotspot_residues   -> which position to target for binder design, for example `1,2-10` or chain specific `A1-10,B1-20` or entire chains `A`, set to null if you want AF2 to select binding site; better to select multiple target residues or a small patch to reduce search space for binder
+    | lengths                   -> range of binder lengths to design
+    | number_of_final_designs   -> how many designs that pass all filters to aim for, script will stop if this many are reached
+    |
+    
+    
+    *Filter Settings*
+    
+    | The filters setting points to the json where the design filters are specified (default is default_filters.json). The user can select from a list of filter json files containing predefined filter parameters (json files available here: https://github.com/martinpacesa/BindCraft/tree/v1.5.0/settings_filters). 
+    |
+    
+    *Advanced Settings*
+    
+    | The advanced setting points to the json containing advanced settings (default is default_4stage_multimer.json). The user can select from a list of advanced setting json files containing predefined advanced setting parameters (json files available here: https://github.com/martinpacesa/BindCraft/tree/v1.5.0/settings_advanced). 
+    |
+    
+    **Outputs**
+          
+    *PDB Files Collections*
+          
+    |
+    |
+    |
+          
+    *Trajectory Stats CSV*
+          
+    | 
+    |
+    |
+          
+    *MPNN Design Stats CSV*
+    
+    | 
+    |
+    |
+    
+    *Final Design Stats CSV*
+    
+    | 
+    |
+    |
+    
+    *Failure CSV*
+    
+    | 
+    | 
+    |
+    | 
+    |
+    
+    
+                          
+  ]]></help>
+    
+  <citations>
+    <citation type="doi">https://doi.org/10.1101/2024.09.30.615802</citation>
+    <citation type="bibtex">@ARTICLE{{Pacesa2024.09.30.615802,
+      author = {Pacesa, Martin and Nickel, Lennart and Schellhaas, Christian and Schmidt, Joseph and Pyatova, Ekaterina and Kissling, Lucas and Barendse, Patrick and Choudhury, Jagrity and Kapoor, Srajan and Alcaraz-Serna, Ana and Cho, Yehlin and Ghamary, Kourosh H. and Vinu{\'e}, Laura and Yachnin, Brahm J. and Wollacott, Andrew M. and Buckley, Stephen and Westphal, Adrie H. and Lindhoud, Simon and Georgeon, Sandrine and Goverde, Casper A. and Hatzopoulos, Georgios N. and G{\"o}nczy, Pierre and Muller, Yannick D. and Schwank, Gerald and Swarts, Daan C. and Vecchio, Alex J. and Schneider, Bernard L. and Ovchinnikov, Sergey and Correia, Bruno E.},
+      title = {BindCraft: one-shot design of functional protein binders},
+      elocation-id = {2024.09.30.615802},
+      year = {2024},
+      doi = {10.1101/2024.09.30.615802},
+      publisher = {Cold Spring Harbor Laboratory},
+      URL = {https://www.biorxiv.org/content/early/2024/12/07/2024.09.30.615802},
+      eprint = {https://www.biorxiv.org/content/early/2024/12/07/2024.09.30.615802.full.pdf},
+      journal = {bioRxiv}
+      }</citation>
+  </citations>
+
+</tool>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
